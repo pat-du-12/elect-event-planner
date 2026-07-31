@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedElusRouteImport } from './routes/_authenticated/elus'
 import { Route as AuthenticatedTableauDeBordRouteImport } from './routes/_authenticated/tableau-de-bord'
+import { Route as AuthenticatedIrdIdRouteImport } from './routes/_authenticated/ird.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,18 +41,25 @@ const AuthenticatedTableauDeBordRoute =
     path: '/tableau-de-bord',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedIrdIdRoute = AuthenticatedIrdIdRouteImport.update({
+  id: '/ird/$id',
+  path: '/ird/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/elus': typeof AuthenticatedElusRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/ird/$id': typeof AuthenticatedIrdIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/elus': typeof AuthenticatedElusRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/ird/$id': typeof AuthenticatedIrdIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -60,12 +68,13 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/elus': typeof AuthenticatedElusRoute
   '/_authenticated/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/_authenticated/ird/$id': typeof AuthenticatedIrdIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/elus' | '/tableau-de-bord'
+  fullPaths: '/' | '/auth' | '/elus' | '/tableau-de-bord' | '/ird/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/elus' | '/tableau-de-bord'
+  to: '/' | '/auth' | '/elus' | '/tableau-de-bord' | '/ird/$id'
   id:
     | '__root__'
     | '/'
@@ -73,6 +82,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/elus'
     | '/_authenticated/tableau-de-bord'
+    | '/_authenticated/ird/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,17 +128,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTableauDeBordRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ird/$id': {
+      id: '/_authenticated/ird/$id'
+      path: '/ird/$id'
+      fullPath: '/ird/$id'
+      preLoaderRoute: typeof AuthenticatedIrdIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedElusRoute: typeof AuthenticatedElusRoute
   AuthenticatedTableauDeBordRoute: typeof AuthenticatedTableauDeBordRoute
+  AuthenticatedIrdIdRoute: typeof AuthenticatedIrdIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedElusRoute: AuthenticatedElusRoute,
   AuthenticatedTableauDeBordRoute: AuthenticatedTableauDeBordRoute,
+  AuthenticatedIrdIdRoute: AuthenticatedIrdIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
