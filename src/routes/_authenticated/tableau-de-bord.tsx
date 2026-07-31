@@ -144,7 +144,7 @@ function Section({
                       </div>
                     </div>
                     <div className="flex gap-4 text-center text-sm">
-                      <Stat value={accepted} label="Présents" className="text-success" />
+                      <Stat value={accepted} label="Présents" className="text-primary" />
                       <Stat value={declined} label="Absents" className="text-destructive" />
                       <Stat value={pending} label="Sans réponse" className="text-muted-foreground" />
                     </div>
