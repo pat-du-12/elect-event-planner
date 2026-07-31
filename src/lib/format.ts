@@ -25,8 +25,13 @@ export function toDatetimeLocal(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-export const statusLabel: Record<string, string> = {
+const STATUS_LABELS: Record<string, string> = {
   pending: "Sans réponse",
   accepted: "Présent",
   declined: "Absent",
 };
+
+export function statusLabel(status: string): string {
+  return STATUS_LABELS[status] ?? status;
+}
+
