@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { getInvitationByToken, respondToInvitation } from "@/lib/invitations.functions";
@@ -46,7 +46,7 @@ function Centered({ children }: { children: React.ReactNode }) {
 
 function InvitationPage() {
   const invitation = Route.useLoaderData();
-  const router = Route.useRouter();
+  const router = useRouter();
   const respond = useServerFn(respondToInvitation);
   const [saving, setSaving] = useState(false);
 

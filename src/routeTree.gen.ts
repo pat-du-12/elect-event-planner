@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedElusRouteImport } from './routes/_authenticated/elus'
 import { Route as AuthenticatedTableauDeBordRouteImport } from './routes/_authenticated/tableau-de-bord'
+import { Route as InvitationTokenRouteImport } from './routes/invitation.$token'
 import { Route as AuthenticatedIrdIdRouteImport } from './routes/_authenticated/ird.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,6 +42,11 @@ const AuthenticatedTableauDeBordRoute =
     path: '/tableau-de-bord',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const InvitationTokenRoute = InvitationTokenRouteImport.update({
+  id: '/invitation/$token',
+  path: '/invitation/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedIrdIdRoute = AuthenticatedIrdIdRouteImport.update({
   id: '/ird/$id',
   path: '/ird/$id',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/elus': typeof AuthenticatedElusRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/invitation/$token': typeof InvitationTokenRoute
   '/ird/$id': typeof AuthenticatedIrdIdRoute
 }
 export interface FileRoutesByTo {
@@ -59,6 +66,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/elus': typeof AuthenticatedElusRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/invitation/$token': typeof InvitationTokenRoute
   '/ird/$id': typeof AuthenticatedIrdIdRoute
 }
 export interface FileRoutesById {
@@ -68,13 +76,26 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/elus': typeof AuthenticatedElusRoute
   '/_authenticated/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
+  '/invitation/$token': typeof InvitationTokenRoute
   '/_authenticated/ird/$id': typeof AuthenticatedIrdIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/elus' | '/tableau-de-bord' | '/ird/$id'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/elus'
+    | '/tableau-de-bord'
+    | '/invitation/$token'
+    | '/ird/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/elus' | '/tableau-de-bord' | '/ird/$id'
+  to:
+    | '/'
+    | '/auth'
+    | '/elus'
+    | '/tableau-de-bord'
+    | '/invitation/$token'
+    | '/ird/$id'
   id:
     | '__root__'
     | '/'
@@ -82,6 +103,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/elus'
     | '/_authenticated/tableau-de-bord'
+    | '/invitation/$token'
     | '/_authenticated/ird/$id'
   fileRoutesById: FileRoutesById
 }
@@ -89,6 +111,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  InvitationTokenRoute: typeof InvitationTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -128,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTableauDeBordRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/invitation/$token': {
+      id: '/invitation/$token'
+      path: '/invitation/$token'
+      fullPath: '/invitation/$token'
+      preLoaderRoute: typeof InvitationTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/ird/$id': {
       id: '/_authenticated/ird/$id'
       path: '/ird/$id'
@@ -157,6 +187,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  InvitationTokenRoute: InvitationTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
