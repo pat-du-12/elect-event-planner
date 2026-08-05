@@ -133,19 +133,53 @@ function EventDetail() {
     window.open(data.signedUrl, "_blank", "noopener");
   }
 
-  function mailtoAll() {
-    const pending = invitations.filter((i) => i.elus);
-    if (pending.length === 0 || !event) return;
-    const body = pending
-      .map((i) => `${i.elus!.full_name} : ${linkFor(i.token)}`)
-      .join("\n");
-    const subject = encodeURIComponent(`Invitation IRD — ${event.title}`);
-    window.location.href = `mailto:?subject=${subject}&body=${encodeURIComponent(
-      `Bonjour,\n\nVous êtes invité(e) à l'IRD « ${event.title} » le ${formatDateTime(
-        event.starts_at,
-      )} à ${event.location}.\n\nMerci de confirmer votre présence via votre lien personnel :\n${body}\n\nCordialement,\nMairie de Rodez`,
-    )}`;
+  function messageFor(inv: Invitation) {
+    return `Bonjour ${inv.elus?.full_name ?? ""},\n\nVous êtes invité(e) à l'IRD « ${event!.title} » le ${formatDateTime(
+      event!.starts_at,
+    )} à ${event!.location}.${event!.mayor_present ? "\nMonsieur le Maire sera présent." : ""}${
+      event!.description ? `\n\n${event!.description}` : ""
+    }\n\nMerci de confirmer votre présence via votre lien personnel :\n${linkFor(inv.token)}\n\nCordialement,\nMairie de Rodez`;
   }
+
+  async function fetchAttachment(): Promise<EmlAttachment | null> {
+    if (!event?.attachment_path || !event.attachment_name) return null;
+    const { data, error } = await supabase.storage
+      .from("ird-attachments")
+      .download(event.attachment_path);
+    if (error || !data) return null;
+    return {
+      filename: event.attachment_name,
+      contentType: data.type || "application/octet-stream",
+      bytes: new Uint8Array(await data.arrayBuffer()),
+    };
+  }
+
+  async function openOutlookFor(list: Invitation[]) {
+    const targets = list.filter((i) => i.elus?.email);
+    if (targets.length === 0 || !event) return;
+    setSending(true);
+    try {
+      const attachment = await fetchAttachment();
+      for (const inv of targets) {
+        openInOutlook({
+          to: inv.elus!.email,
+          subject: `Invitation IRD — ${event.title}`,
+          body: messageFor(inv),
+          attachment,
+          filename: `IRD-${event.title}-${inv.elus!.full_name}`,
+        });
+        await new Promise((r) => setTimeout(r, 300));
+      }
+      toast.success(
+        targets.length === 1
+          ? "Message prêt : ouvrez le fichier téléchargé pour l'envoyer depuis Outlook."
+          : `${targets.length} messages préparés : ouvrez-les pour les envoyer depuis Outlook.`,
+      );
+    } finally {
+      setSending(false);
+    }
+  }
+
 
   function exportCsv() {
     const rows = [
