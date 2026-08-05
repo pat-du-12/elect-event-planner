@@ -369,7 +369,16 @@ function EventDetail() {
                           >
                             <Copy className="h-4 w-4" /> Copier
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={sending}
+                            onClick={() => openOutlookFor([inv])}
+                          >
+                            <Mail className="h-4 w-4" /> Outlook
+                          </Button>
                         </TableCell>
+
                         <TableCell className="text-right">
                           <Button
                             variant="ghost"
