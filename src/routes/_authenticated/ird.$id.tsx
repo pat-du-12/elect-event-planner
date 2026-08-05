@@ -29,7 +29,9 @@ import {
   UserCheck,
 } from "lucide-react";
 import { formatDateTime, statusLabel } from "@/lib/format";
+import { openInOutlook, type EmlAttachment } from "@/lib/outlook";
 import type { Tables } from "@/integrations/supabase/types";
+
 
 export const Route = createFileRoute("/_authenticated/ird/$id")({
   head: () => ({
