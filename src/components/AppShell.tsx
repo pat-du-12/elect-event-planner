@@ -34,6 +34,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             >
               Élus
             </Link>
+            <Link
+              to="/calendrier"
+              className="rounded px-3 py-2 text-sm transition-colors hover:bg-primary-foreground/10 [&.active]:bg-primary-foreground/15"
+            >
+              Calendrier
+            </Link>
+
             <Button
               variant="ghost"
               size="sm"
