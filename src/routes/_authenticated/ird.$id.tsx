@@ -58,6 +58,8 @@ function EventDetail() {
   const { id } = Route.useParams();
   const [editOpen, setEditOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+  const [sending, setSending] = useState(false);
+
 
   const eventQuery = useQuery({
     queryKey: ["event", id],
