@@ -307,9 +307,16 @@ function EventDetail() {
               Invitations ({invitations.length})
             </CardTitle>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={mailtoAll} disabled={!invitations.length}>
-                <Mail className="h-4 w-4" /> Envoyer par e-mail
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => openOutlookFor(invitations)}
+                disabled={!invitations.length || sending}
+              >
+                <Mail className="h-4 w-4" />
+                {sending ? "Préparation…" : "Ouvrir dans Outlook"}
               </Button>
+
               <Button size="sm" variant="ghost" onClick={exportCsv} disabled={!invitations.length}>
                 <Download className="h-4 w-4" /> CSV
               </Button>
