@@ -161,6 +161,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      public_calendar: {
+        Args: never
+        Returns: {
+          id: string
+          location: string
+          mayor_present: boolean
+          participants: Json
+          starts_at: string
+          title: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin"
