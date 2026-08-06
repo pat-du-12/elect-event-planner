@@ -34,23 +34,33 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  async function goToHome(userId: string) {
+    const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+    if (roles?.some((r) => r.role === "admin")) {
+      router.navigate({ to: "/tableau-de-bord" });
+    } else {
+      router.navigate({ to: "/mes-invitations" });
+    }
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
       if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.navigate({ to: "/tableau-de-bord" });
+        if (data.user) await goToHome(data.user.id);
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        router.navigate({ to: "/tableau-de-bord" });
+        if (data.user) await goToHome(data.user.id);
       }
+
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
     } finally {
