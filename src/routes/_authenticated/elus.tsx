@@ -260,6 +260,39 @@ function ElusPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={credentials !== null} onOpenChange={(open) => !open && setCredentials(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-serif">Identifiants du compte</DialogTitle>
+            <DialogDescription>
+              Communiquez ces identifiants à l'élu. Le mot de passe n'est affiché qu'une seule fois.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div>
+              <p className="text-muted-foreground">Identifiant (e-mail)</p>
+              <p className="font-mono">{credentials?.email}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Mot de passe provisoire</p>
+              <p className="font-mono text-base">{credentials?.password}</p>
+            </div>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  `Identifiant : ${credentials?.email}\nMot de passe : ${credentials?.password}`,
+                );
+                toast.success("Identifiants copiés.");
+              }}
+            >
+              Copier les identifiants
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
+
