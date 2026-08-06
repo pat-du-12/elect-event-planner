@@ -1,6 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAppRole } from "@/hooks/useAppRole";
+
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { EventFormDialog } from "@/components/EventFormDialog";
@@ -42,6 +44,14 @@ type EventWithInvites = {
 
 function Dashboard() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const router = useRouter();
+  const { isAdmin, isLoading: roleLoading } = useAppRole();
+
+  useEffect(() => {
+    if (!roleLoading && !isAdmin) router.navigate({ to: "/mes-invitations" });
+  }, [roleLoading, isAdmin, router]);
+
+
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["events"],
