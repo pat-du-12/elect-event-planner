@@ -43,18 +43,13 @@ function AuthPage() {
         if (error) throw error;
         router.navigate({ to: "/tableau-de-bord" });
       } else {
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        if (data.session) {
-          router.navigate({ to: "/tableau-de-bord" });
-        } else {
-          toast.success("Compte créé. Vérifiez votre boîte mail pour confirmer l'adresse.");
-          setMode("signin");
-        }
+        router.navigate({ to: "/tableau-de-bord" });
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
