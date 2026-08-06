@@ -49,17 +49,21 @@ export const Route = createFileRoute("/_authenticated/elus")({
 function ElusPage() {
   const [saving, setSaving] = useState(false);
   const [bulk, setBulk] = useState("");
+  const [creatingFor, setCreatingFor] = useState<string | null>(null);
+  const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
+  const createAccount = useServerFn(createEluAccount);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["elus"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("elus")
-        .select("id, full_name, email, role_title")
+        .select("id, full_name, email, role_title, user_id")
         .order("full_name");
       if (error) throw error;
       return data;
     },
+
   });
 
   async function addElu(e: React.FormEvent<HTMLFormElement>) {
