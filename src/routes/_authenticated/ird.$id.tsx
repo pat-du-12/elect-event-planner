@@ -142,7 +142,7 @@ function EventDetail() {
       event!.starts_at,
     )} à ${event!.location}.${event!.mayor_present ? "\nMonsieur le Maire sera présent." : ""}${
       event!.description ? `\n\n${event!.description}` : ""
-    }\n\nMerci de confirmer votre présence via votre lien personnel :\n${linkFor(inv.token)}\n\nCordialement,\nMairie de Rodez`;
+    }\n\nMerci de confirmer votre présence depuis votre espace personnel :\n${window.location.origin}/mes-invitations\n\nCordialement,\nMairie de Rodez`;
   }
 
   async function fetchAttachment(): Promise<EmlAttachment | null> {
