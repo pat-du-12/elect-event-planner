@@ -200,6 +200,7 @@ function ElusPage() {
                     <TableHead>Nom</TableHead>
                     <TableHead>E-mail</TableHead>
                     <TableHead>Fonction</TableHead>
+                    <TableHead>Compte</TableHead>
                     <TableHead />
                   </TableRow>
                 </TableHeader>
@@ -209,7 +210,24 @@ function ElusPage() {
                       <TableCell className="font-medium">{elu.full_name}</TableCell>
                       <TableCell>{elu.email}</TableCell>
                       <TableCell>{elu.role_title ?? "—"}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell>
+                        {elu.user_id ? (
+                          <Badge variant="secondary">Actif</Badge>
+                        ) : (
+                          <Badge variant="outline">Aucun</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mr-2"
+                          disabled={creatingFor === elu.id}
+                          onClick={() => makeAccount(elu.id)}
+                        >
+                          <KeyRound className="h-4 w-4" />
+                          {elu.user_id ? "Nouveau mot de passe" : "Créer le compte"}
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -221,6 +239,7 @@ function ElusPage() {
                       </TableCell>
                     </TableRow>
                   ))}
+
                 </TableBody>
               </Table>
             </div>
