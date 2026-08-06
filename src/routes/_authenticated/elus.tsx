@@ -117,6 +117,19 @@ function ElusPage() {
     refetch();
   }
 
+  async function makeAccount(eluId: string) {
+    setCreatingFor(eluId);
+    try {
+      const result = await createAccount({ data: { eluId } });
+      setCredentials(result);
+      refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Création du compte impossible.");
+    } finally {
+      setCreatingFor(null);
+    }
+  }
+
   async function removeElu(id: string) {
     const { error } = await supabase.from("elus").delete().eq("id", id);
     if (error) {
@@ -126,6 +139,7 @@ function ElusPage() {
     toast.success("Élu supprimé.");
     refetch();
   }
+
 
   return (
     <AppShell>
