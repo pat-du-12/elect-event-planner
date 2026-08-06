@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CalendrierRouteImport } from './routes/calendrier'
 import { Route as AuthenticatedElusRouteImport } from './routes/_authenticated/elus'
+import { Route as AuthenticatedMesInvitationsRouteImport } from './routes/_authenticated/mes-invitations'
 import { Route as AuthenticatedTableauDeBordRouteImport } from './routes/_authenticated/tableau-de-bord'
 import { Route as InvitationTokenRouteImport } from './routes/invitation.$token'
 import { Route as AuthenticatedIrdIdRouteImport } from './routes/_authenticated/ird.$id'
@@ -42,6 +43,12 @@ const AuthenticatedElusRoute = AuthenticatedElusRouteImport.update({
   path: '/elus',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMesInvitationsRoute =
+  AuthenticatedMesInvitationsRouteImport.update({
+    id: '/mes-invitations',
+    path: '/mes-invitations',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedTableauDeBordRoute =
   AuthenticatedTableauDeBordRouteImport.update({
     id: '/tableau-de-bord',
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/calendrier': typeof CalendrierRoute
   '/elus': typeof AuthenticatedElusRoute
+  '/mes-invitations': typeof AuthenticatedMesInvitationsRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/invitation/$token': typeof InvitationTokenRoute
   '/ird/$id': typeof AuthenticatedIrdIdRoute
@@ -73,6 +81,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/calendrier': typeof CalendrierRoute
   '/elus': typeof AuthenticatedElusRoute
+  '/mes-invitations': typeof AuthenticatedMesInvitationsRoute
   '/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/invitation/$token': typeof InvitationTokenRoute
   '/ird/$id': typeof AuthenticatedIrdIdRoute
@@ -84,6 +93,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/calendrier': typeof CalendrierRoute
   '/_authenticated/elus': typeof AuthenticatedElusRoute
+  '/_authenticated/mes-invitations': typeof AuthenticatedMesInvitationsRoute
   '/_authenticated/tableau-de-bord': typeof AuthenticatedTableauDeBordRoute
   '/invitation/$token': typeof InvitationTokenRoute
   '/_authenticated/ird/$id': typeof AuthenticatedIrdIdRoute
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/calendrier'
     | '/elus'
+    | '/mes-invitations'
     | '/tableau-de-bord'
     | '/invitation/$token'
     | '/ird/$id'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/calendrier'
     | '/elus'
+    | '/mes-invitations'
     | '/tableau-de-bord'
     | '/invitation/$token'
     | '/ird/$id'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/calendrier'
     | '/_authenticated/elus'
+    | '/_authenticated/mes-invitations'
     | '/_authenticated/tableau-de-bord'
     | '/invitation/$token'
     | '/_authenticated/ird/$id'
@@ -164,6 +177,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedElusRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/mes-invitations': {
+      id: '/_authenticated/mes-invitations'
+      path: '/mes-invitations'
+      fullPath: '/mes-invitations'
+      preLoaderRoute: typeof AuthenticatedMesInvitationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/tableau-de-bord': {
       id: '/_authenticated/tableau-de-bord'
       path: '/tableau-de-bord'
@@ -190,12 +210,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedElusRoute: typeof AuthenticatedElusRoute
+  AuthenticatedMesInvitationsRoute: typeof AuthenticatedMesInvitationsRoute
   AuthenticatedTableauDeBordRoute: typeof AuthenticatedTableauDeBordRoute
   AuthenticatedIrdIdRoute: typeof AuthenticatedIrdIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedElusRoute: AuthenticatedElusRoute,
+  AuthenticatedMesInvitationsRoute: AuthenticatedMesInvitationsRoute,
   AuthenticatedTableauDeBordRoute: AuthenticatedTableauDeBordRoute,
   AuthenticatedIrdIdRoute: AuthenticatedIrdIdRoute,
 }

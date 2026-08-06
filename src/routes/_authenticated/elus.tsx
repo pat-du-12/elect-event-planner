@@ -16,7 +16,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Trash2, UserPlus } from "lucide-react";
+import { KeyRound, Trash2, UserPlus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useServerFn } from "@tanstack/react-start";
+import { createEluAccount } from "@/lib/elu-accounts.functions";
 
 export const Route = createFileRoute("/_authenticated/elus")({
   head: () => ({
@@ -39,17 +49,21 @@ export const Route = createFileRoute("/_authenticated/elus")({
 function ElusPage() {
   const [saving, setSaving] = useState(false);
   const [bulk, setBulk] = useState("");
+  const [creatingFor, setCreatingFor] = useState<string | null>(null);
+  const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
+  const createAccount = useServerFn(createEluAccount);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["elus"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("elus")
-        .select("id, full_name, email, role_title")
+        .select("id, full_name, email, role_title, user_id")
         .order("full_name");
       if (error) throw error;
       return data;
     },
+
   });
 
   async function addElu(e: React.FormEvent<HTMLFormElement>) {
@@ -103,6 +117,19 @@ function ElusPage() {
     refetch();
   }
 
+  async function makeAccount(eluId: string) {
+    setCreatingFor(eluId);
+    try {
+      const result = await createAccount({ data: { eluId } });
+      setCredentials(result);
+      refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Création du compte impossible.");
+    } finally {
+      setCreatingFor(null);
+    }
+  }
+
   async function removeElu(id: string) {
     const { error } = await supabase.from("elus").delete().eq("id", id);
     if (error) {
@@ -112,6 +139,7 @@ function ElusPage() {
     toast.success("Élu supprimé.");
     refetch();
   }
+
 
   return (
     <AppShell>
@@ -186,6 +214,7 @@ function ElusPage() {
                     <TableHead>Nom</TableHead>
                     <TableHead>E-mail</TableHead>
                     <TableHead>Fonction</TableHead>
+                    <TableHead>Compte</TableHead>
                     <TableHead />
                   </TableRow>
                 </TableHeader>
@@ -195,7 +224,24 @@ function ElusPage() {
                       <TableCell className="font-medium">{elu.full_name}</TableCell>
                       <TableCell>{elu.email}</TableCell>
                       <TableCell>{elu.role_title ?? "—"}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell>
+                        {elu.user_id ? (
+                          <Badge variant="secondary">Actif</Badge>
+                        ) : (
+                          <Badge variant="outline">Aucun</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right whitespace-nowrap">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mr-2"
+                          disabled={creatingFor === elu.id}
+                          onClick={() => makeAccount(elu.id)}
+                        >
+                          <KeyRound className="h-4 w-4" />
+                          {elu.user_id ? "Nouveau mot de passe" : "Créer le compte"}
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -207,12 +253,46 @@ function ElusPage() {
                       </TableCell>
                     </TableRow>
                   ))}
+
                 </TableBody>
               </Table>
             </div>
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={credentials !== null} onOpenChange={(open) => !open && setCredentials(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-serif">Identifiants du compte</DialogTitle>
+            <DialogDescription>
+              Communiquez ces identifiants à l'élu. Le mot de passe n'est affiché qu'une seule fois.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div>
+              <p className="text-muted-foreground">Identifiant (e-mail)</p>
+              <p className="font-mono">{credentials?.email}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Mot de passe provisoire</p>
+              <p className="font-mono text-base">{credentials?.password}</p>
+            </div>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  `Identifiant : ${credentials?.email}\nMot de passe : ${credentials?.password}`,
+                );
+                toast.success("Identifiants copiés.");
+              }}
+            >
+              Copier les identifiants
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
+
