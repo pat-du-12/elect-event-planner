@@ -2,7 +2,11 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 
-const createSchema = z.object({ eluId: z.string().uuid() });
+const createSchema = z.object({
+  eluId: z.string().uuid(),
+  /** Mot de passe choisi par l'administrateur. Si absent, un mot de passe est généré. */
+  password: z.string().min(8).max(72).optional(),
+});
 
 function generatePassword(): string {
   const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
@@ -33,7 +37,7 @@ export const createEluAccount = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!elu) throw new Error("Élu introuvable.");
 
-    const password = generatePassword();
+    const password = data.password ?? generatePassword();
 
     if (elu.user_id) {
       const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(elu.user_id, {
