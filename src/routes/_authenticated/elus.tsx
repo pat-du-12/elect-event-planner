@@ -50,6 +50,8 @@ function ElusPage() {
   const [saving, setSaving] = useState(false);
   const [bulk, setBulk] = useState("");
   const [creatingFor, setCreatingFor] = useState<string | null>(null);
+  const [resetFor, setResetFor] = useState<{ id: string; name: string } | null>(null);
+  const [newPassword, setNewPassword] = useState("");
   const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
   const createAccount = useServerFn(createEluAccount);
 
@@ -239,10 +241,14 @@ function ElusPage() {
                           size="sm"
                           className="mr-2"
                           disabled={creatingFor === elu.id}
-                          onClick={() => makeAccount(elu.id)}
+                          onClick={() =>
+                            elu.user_id
+                              ? setResetFor({ id: elu.id, name: elu.full_name })
+                              : makeAccount(elu.id)
+                          }
                         >
                           <KeyRound className="h-4 w-4" />
-                          {elu.user_id ? "Nouveau mot de passe" : "Créer le compte"}
+                          {elu.user_id ? "Réinitialiser le mot de passe" : "Créer le compte"}
                         </Button>
                         <Button
                           variant="ghost"
