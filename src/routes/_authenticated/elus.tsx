@@ -117,11 +117,13 @@ function ElusPage() {
     refetch();
   }
 
-  async function makeAccount(eluId: string) {
+  async function makeAccount(eluId: string, password?: string) {
     setCreatingFor(eluId);
     try {
-      const result = await createAccount({ data: { eluId } });
+      const result = await createAccount({ data: password ? { eluId, password } : { eluId } });
       setCredentials(result);
+      setResetFor(null);
+      setNewPassword("");
       refetch();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Création du compte impossible.");
