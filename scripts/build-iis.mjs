@@ -39,9 +39,14 @@ if (build.status !== 0) {
 
 const nitroOutput = resolve(root, ".output");
 if (!existsSync(nitroOutput)) {
-  console.error("✗ Dossier .output introuvable — le build Node ne s'est pas terminé.");
+  console.error(
+    "✗ Dossier .output introuvable.\n" +
+      "  Ce script doit être lancé depuis un poste local (dépôt exporté via GitHub),\n" +
+      "  et non depuis l'éditeur en ligne où le build cible toujours l'hébergement Lovable.",
+  );
   process.exit(1);
 }
+
 
 rmSync(outDir, { recursive: true, force: true });
 mkdirSync(outDir, { recursive: true });
