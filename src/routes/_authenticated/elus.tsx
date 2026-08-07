@@ -269,6 +269,49 @@ function ElusPage() {
         </CardContent>
       </Card>
 
+      <Dialog
+        open={resetFor !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setResetFor(null);
+            setNewPassword("");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="font-serif">Réinitialiser le mot de passe</DialogTitle>
+            <DialogDescription>
+              Définissez un nouveau mot de passe pour {resetFor?.name}, ou laissez le champ vide
+              pour en générer un automatiquement.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new_password">Nouveau mot de passe (8 caractères minimum)</Label>
+              <Input
+                id="new_password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                minLength={8}
+                maxLength={72}
+                placeholder="Laisser vide pour générer"
+              />
+            </div>
+            <Button
+              disabled={creatingFor === resetFor?.id || (newPassword.length > 0 && newPassword.length < 8)}
+              onClick={() =>
+                resetFor &&
+                makeAccount(resetFor.id, newPassword.length >= 8 ? newPassword : undefined)
+              }
+            >
+              <KeyRound className="h-4 w-4" /> Appliquer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+
       <Dialog open={credentials !== null} onOpenChange={(open) => !open && setCredentials(null)}>
         <DialogContent>
           <DialogHeader>
