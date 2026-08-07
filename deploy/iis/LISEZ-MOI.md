@@ -14,10 +14,14 @@ authentification hébergées dans le cloud).
 
 ## 2. Générer le paquet (sur le poste de développement)
 
+Le build doit être lancé **en local**, après export du projet vers GitHub puis
+clone du dépôt (dans l'éditeur en ligne, le build cible l'hébergement Lovable).
+
 ```bash
 npm install
 npm run build:iis
 ```
+
 
 Un dossier **`dist-iis/`** est créé :
 
