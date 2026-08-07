@@ -37,7 +37,7 @@ export const createEluAccount = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     if (!elu) throw new Error("Élu introuvable.");
 
-    const password = generatePassword();
+    const password = data.password ?? generatePassword();
 
     if (elu.user_id) {
       const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(elu.user_id, {
