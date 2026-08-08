@@ -9,9 +9,10 @@ export function generatePassword(): string {
 
 type RpcClient = {
   rpc: (
-    name: string,
-    args: Record<string, unknown>,
-  ) => Promise<{ data: unknown; error: { message: string } | null }>;
+    name: "has_role",
+    args: { _user_id: string; _role: "admin" },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ) => any;
 };
 
 /** Vérifie que l'appelant possède le rôle administrateur. */
@@ -23,3 +24,4 @@ export async function assertAdmin(context: { supabase: RpcClient; userId: string
   if (error) throw new Error(error.message);
   if (!isAdmin) throw new Error("Action réservée à l'administrateur.");
 }
+
