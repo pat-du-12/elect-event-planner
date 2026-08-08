@@ -58,8 +58,17 @@ function ElusPage() {
   const [creatingFor, setCreatingFor] = useState<string | null>(null);
   const [resetFor, setResetFor] = useState<{ id: string; name: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(true);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [showAdminPassword, setShowAdminPassword] = useState(true);
   const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
   const createAccount = useServerFn(createEluAccount);
+  const createAdmin = useServerFn(createAdminAccount);
+  const deleteAccount = useServerFn(deleteUserAccount);
+  const fetchAdmins = useServerFn(listAdmins);
+
+  const adminsQuery = useQuery({ queryKey: ["admins"], queryFn: () => fetchAdmins() });
+
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["elus"],
