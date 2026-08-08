@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { KeyRound, Trash2, UserPlus } from "lucide-react";
+import { Eye, EyeOff, KeyRound, ShieldPlus, Trash2, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -26,7 +26,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useServerFn } from "@tanstack/react-start";
-import { createEluAccount } from "@/lib/elu-accounts.functions";
+import {
+  createAdminAccount,
+  createEluAccount,
+  deleteUserAccount,
+  listAdmins,
+} from "@/lib/elu-accounts.functions";
+
 
 export const Route = createFileRoute("/_authenticated/elus")({
   head: () => ({
