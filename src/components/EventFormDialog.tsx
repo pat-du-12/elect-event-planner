@@ -148,6 +148,27 @@ export function EventFormDialog({
             />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="address">Adresse complète (facultative)</Label>
+            <Input
+              id="address"
+              name="address"
+              defaultValue={event?.address ?? ""}
+              maxLength={250}
+              placeholder="12 place du Bourg, 12000 Rodez"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="organizer">Organisateur</Label>
+            <Input
+              id="organizer"
+              name="organizer"
+              defaultValue={event?.organizer ?? ""}
+              maxLength={160}
+              placeholder="Nom de la personne qui organise"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="starts_at">Date et heure</Label>
             <Input
               id="starts_at"
