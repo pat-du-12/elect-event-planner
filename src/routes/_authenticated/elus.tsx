@@ -306,7 +306,7 @@ function ElusPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => removeElu(elu.id)}
+                          onClick={() => removeElu(elu.id, elu.full_name)}
                           aria-label={`Supprimer ${elu.full_name}`}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
