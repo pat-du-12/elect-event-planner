@@ -342,15 +342,28 @@ function ElusPage() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="new_password">Nouveau mot de passe (8 caractères minimum)</Label>
-              <Input
-                id="new_password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                minLength={8}
-                maxLength={72}
-                placeholder="Laisser vide pour générer"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="new_password"
+                  type={showPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  minLength={8}
+                  maxLength={72}
+                  placeholder="Laisser vide pour générer"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
+
             <Button
               disabled={creatingFor === resetFor?.id || (newPassword.length > 0 && newPassword.length < 8)}
               onClick={() =>
