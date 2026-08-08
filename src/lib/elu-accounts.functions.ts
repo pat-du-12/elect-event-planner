@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { assertAdmin, generatePassword } from "@/lib/account-helpers";
 
 const createSchema = z.object({
   eluId: z.string().uuid(),
@@ -28,21 +29,6 @@ export type AdminAccount = {
   isSelf: boolean;
 };
 
-function generatePassword(): string {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-  const bytes = new Uint8Array(14);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
-}
-
-async function assertAdmin(context: { supabase: any; userId: string }) {
-  const { data: isAdmin, error } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "admin",
-  });
-  if (error) throw new Error(error.message);
-  if (!isAdmin) throw new Error("Action réservée à l'administrateur.");
-}
 
 /** Crée (ou réinitialise) le compte personnel d'un élu. Réservé à l'administrateur. */
 export const createEluAccount = createServerFn({ method: "POST" })
