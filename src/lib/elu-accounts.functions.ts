@@ -144,10 +144,19 @@ export const createAdminAccount = createServerFn({ method: "POST" })
       userId = existing.id;
     }
 
-    const { error: roleError } = await supabaseAdmin
+    const { data: existingRole } = await supabaseAdmin
       .from("user_roles")
-      .upsert({ user_id: userId, role: "admin" }, { onConflict: "user_id,role" });
-    if (roleError) throw new Error(roleError.message);
+      .select("id")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!existingRole) {
+      const { error: roleError } = await supabaseAdmin
+        .from("user_roles")
+        .insert({ user_id: userId, role: "admin" });
+      if (roleError) throw new Error(roleError.message);
+    }
+
 
     return { email, password: data.password };
   });
