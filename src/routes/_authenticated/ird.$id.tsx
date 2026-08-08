@@ -125,11 +125,11 @@ function EventDetail() {
     return `${window.location.origin}/invitation/${token}`;
   }
 
-  async function downloadAttachment() {
-    if (!event?.attachment_path) return;
+  async function downloadAttachment(path: string | null) {
+    if (!path) return;
     const { data, error } = await supabase.storage
       .from("ird-attachments")
-      .createSignedUrl(event.attachment_path, 300);
+      .createSignedUrl(path, 300);
     if (error || !data) {
       toast.error("Téléchargement impossible.");
       return;
@@ -137,22 +137,45 @@ function EventDetail() {
     window.open(data.signedUrl, "_blank", "noopener");
   }
 
-  function messageFor(inv: Invitation) {
-    return `Bonjour ${inv.elus?.full_name ?? ""},\n\nVous êtes invité(e) à l'IRD « ${event!.title} » le ${formatDateTime(
-      event!.starts_at,
-    )} à ${event!.location}.${event!.mayor_present ? "\nMonsieur le Maire sera présent." : ""}${
-      event!.description ? `\n\n${event!.description}` : ""
-    }\n\nMerci de confirmer votre présence depuis votre espace personnel :\n${window.location.origin}/mes-invitations\n\nCordialement,\nMairie de Rodez`;
+  function guestList() {
+    return invitations
+      .map((i) => `- ${i.elus?.full_name ?? ""} (${statusLabel(i.status)})`)
+      .join("\n");
   }
 
-  async function fetchAttachment(): Promise<EmlAttachment | null> {
-    if (!event?.attachment_path || !event.attachment_name) return null;
-    const { data, error } = await supabase.storage
-      .from("ird-attachments")
-      .download(event.attachment_path);
+  function messageFor(inv: Invitation) {
+    const e = event!;
+    const lines = [
+      `Bonjour ${inv.elus?.full_name ?? ""},`,
+      "",
+      `Vous êtes invité(e) à l'IRD « ${e.title} ».`,
+      "",
+      `Date et heure : ${formatDateTime(e.starts_at)}`,
+      `Lieu : ${e.location}`,
+      e.address ? `Adresse : ${e.address}` : null,
+      e.organizer ? `Organisé par : ${e.organizer}` : null,
+      `Présence de Monsieur le Maire : ${e.mayor_present ? "oui" : "non"}`,
+      e.description ? `\nDescriptif :\n${e.description}` : null,
+      `\nListe des invités :\n${guestList()}`,
+      "",
+      "Merci de confirmer votre présence depuis votre espace personnel :",
+      `${window.location.origin}/mes-invitations`,
+      "",
+      "Cordialement,",
+      "Mairie de Rodez",
+    ].filter((l) => l !== null);
+    return lines.join("\n");
+  }
+
+  async function fetchFile(
+    path: string | null,
+    name: string | null,
+  ): Promise<EmlAttachment | null> {
+    if (!path || !name) return null;
+    const { data, error } = await supabase.storage.from("ird-attachments").download(path);
     if (error || !data) return null;
     return {
-      filename: event.attachment_name,
+      filename: name,
       contentType: data.type || "application/octet-stream",
       bytes: new Uint8Array(await data.arrayBuffer()),
     };
@@ -163,13 +186,16 @@ function EventDetail() {
     if (targets.length === 0 || !event) return;
     setSending(true);
     try {
-      const attachment = await fetchAttachment();
+      const attachments = [
+        await fetchFile(event.photo_path, event.photo_name),
+        await fetchFile(event.attachment_path, event.attachment_name),
+      ];
       for (const inv of targets) {
         openInOutlook({
           to: inv.elus!.email,
           subject: `Invitation IRD — ${event.title}`,
           body: messageFor(inv),
-          attachment,
+          attachments,
           filename: `IRD-${event.title}-${inv.elus!.full_name}`,
         });
         await new Promise((r) => setTimeout(r, 300));
@@ -183,6 +209,7 @@ function EventDetail() {
       setSending(false);
     }
   }
+
 
 
   function exportCsv() {
