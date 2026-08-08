@@ -149,15 +149,53 @@ function ElusPage() {
     }
   }
 
-  async function removeElu(id: string) {
-    const { error } = await supabase.from("elus").delete().eq("id", id);
-    if (error) {
-      toast.error(error.message);
+  async function removeElu(id: string, name: string) {
+    if (!window.confirm(`Supprimer définitivement ${name} et son compte utilisateur ?`)) return;
+    try {
+      await deleteAccount({ data: { eluId: id } });
+      toast.success("Élu et compte supprimés.");
+      refetch();
+      adminsQuery.refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Suppression impossible.");
+    }
+  }
+
+  async function removeAdmin(userId: string, name: string) {
+    if (!window.confirm(`Supprimer définitivement l'administrateur ${name} ?`)) return;
+    try {
+      await deleteAccount({ data: { userId } });
+      toast.success("Administrateur supprimé.");
+      adminsQuery.refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Suppression impossible.");
+    }
+  }
+
+  async function addAdmin(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    const email = String(fd.get("admin_email") ?? "").trim().toLowerCase();
+    const fullName = String(fd.get("admin_name") ?? "").trim();
+    if (!email || !fullName || adminPassword.length < 8) {
+      toast.error("Nom, e-mail et mot de passe (8 caractères minimum) sont requis.");
       return;
     }
-    toast.success("Élu supprimé.");
-    refetch();
+    setSaving(true);
+    try {
+      const result = await createAdmin({ data: { email, fullName, password: adminPassword } });
+      setCredentials(result);
+      setAdminPassword("");
+      form.reset();
+      adminsQuery.refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Création impossible.");
+    } finally {
+      setSaving(false);
+    }
   }
+
 
 
   return (
