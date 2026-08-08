@@ -189,7 +189,7 @@ export function EventFormDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="attachment">Pièce jointe</Label>
+            <Label htmlFor="attachment">Pièce jointe (document)</Label>
             <Input
               id="attachment"
               type="file"
@@ -202,6 +202,19 @@ export function EventFormDialog({
               </p>
             )}
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="photo">Photo / visuel de l'invitation</Label>
+            <Input
+              id="photo"
+              type="file"
+              accept="image/*,.pdf"
+              onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+            />
+            {event?.photo_name && !photo && (
+              <p className="text-xs text-muted-foreground">Visuel actuel : {event.photo_name}</p>
+            )}
+          </div>
+
           <div className="flex items-center gap-2 rounded border bg-secondary/60 p-3">
             <Checkbox
               id="mayor_present"
