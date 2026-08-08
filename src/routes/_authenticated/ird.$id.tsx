@@ -265,19 +265,37 @@ function EventDetail() {
           </p>
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <MapPin className="h-4 w-4" aria-hidden /> {event.location}
+            {event.address ? ` — ${event.address}` : ""}
           </p>
+          {event.organizer && (
+            <p className="text-sm text-muted-foreground">Organisé par {event.organizer}</p>
+          )}
           <div className="flex flex-wrap gap-2 pt-1">
             {event.mayor_present && (
               <Badge variant="secondary">
                 <UserCheck className="mr-1 h-3 w-3" aria-hidden /> Maire présent
               </Badge>
             )}
+            {event.photo_name && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => downloadAttachment(event.photo_path)}
+              >
+                <Paperclip className="h-4 w-4" /> {event.photo_name}
+              </Button>
+            )}
             {event.attachment_name && (
-              <Button variant="outline" size="sm" onClick={downloadAttachment}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => downloadAttachment(event.attachment_path)}
+              >
                 <Paperclip className="h-4 w-4" /> {event.attachment_name}
               </Button>
             )}
           </div>
+
         </div>
         <Button variant="outline" onClick={() => setEditOpen(true)}>
           <Pencil className="h-4 w-4" /> Modifier
