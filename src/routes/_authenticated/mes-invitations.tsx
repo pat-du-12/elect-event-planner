@@ -106,7 +106,13 @@ function MyInvitationsPage() {
                     </p>
                     <p className="flex items-center gap-2 text-sm text-muted-foreground">
                       <MapPin className="h-4 w-4" aria-hidden /> {inv.event.location}
+                      {inv.event.address ? ` — ${inv.event.address}` : ""}
                     </p>
+                    {inv.event.organizer && (
+                      <p className="text-sm text-muted-foreground">
+                        Organisé par {inv.event.organizer}
+                      </p>
+                    )}
                     <div className="flex flex-wrap items-center gap-2">
                       {inv.event.mayorPresent && (
                         <Badge variant="secondary">
@@ -124,6 +130,17 @@ function MyInvitationsPage() {
                       >
                         {statusLabel(inv.status)}
                       </Badge>
+                      {inv.event.photoUrl && (
+                        <a
+                          href={inv.event.photoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-sm underline"
+                        >
+                          <Paperclip className="h-4 w-4" aria-hidden />
+                          {inv.event.photoName}
+                        </a>
+                      )}
                       {inv.event.attachmentUrl && (
                         <a
                           href={inv.event.attachmentUrl}
@@ -136,11 +153,47 @@ function MyInvitationsPage() {
                         </a>
                       )}
                     </div>
+                    {inv.event.photoUrl && (
+                      <img
+                        src={inv.event.photoUrl}
+                        alt={`Visuel de l'invitation ${inv.event.title}`}
+                        loading="lazy"
+                        className="max-h-72 rounded border object-contain"
+                      />
+                    )}
                     {inv.event.description && (
                       <p className="whitespace-pre-line rounded border bg-secondary/40 p-3 text-sm">
                         {inv.event.description}
                       </p>
                     )}
+                    <div className="rounded border bg-card p-3">
+                      <p className="mb-2 text-sm font-medium">
+                        Invités ({inv.participants.length}) —{" "}
+                        {inv.participants.filter((p) => p.status === "accepted").length} présent(s)
+                      </p>
+                      <ul className="space-y-1 text-sm text-muted-foreground">
+                        {inv.participants.map((p) => (
+                          <li key={p.name} className="flex items-center justify-between gap-3">
+                            <span>
+                              {p.name}
+                              {p.isMe ? " (vous)" : ""}
+                            </span>
+                            <Badge
+                              variant={
+                                p.status === "accepted"
+                                  ? "default"
+                                  : p.status === "declined"
+                                    ? "destructive"
+                                    : "outline"
+                              }
+                            >
+                              {statusLabel(p.status)}
+                            </Badge>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
                     <div className="flex flex-wrap gap-2 pt-1">
                       <Button
                         onClick={() => answer(inv.id, "accepted")}
