@@ -33,9 +33,10 @@ export function buildEml(options: {
   to: string;
   subject: string;
   body: string;
-  attachment?: EmlAttachment | null;
+  attachments?: (EmlAttachment | null | undefined)[];
 }) {
-  const { to, subject, body, attachment } = options;
+  const { to, subject, body } = options;
+  const attachments = (options.attachments ?? []).filter(Boolean) as EmlAttachment[];
   const boundary = `----ird-${Math.random().toString(36).slice(2)}`;
   const headers = [
     "MIME-Version: 1.0",
@@ -52,9 +53,19 @@ export function buildEml(options: {
     wrap(base64(new TextEncoder().encode(body))),
   ].join("\r\n");
 
-  if (!attachment) {
+  if (attachments.length === 0) {
     return [...headers, textPart].join("\r\n");
   }
+
+  const parts = attachments.flatMap((attachment) => [
+    `--${boundary}`,
+    `Content-Type: ${attachment.contentType}; name="${attachment.filename}"`,
+    "Content-Transfer-Encoding: base64",
+    `Content-Disposition: attachment; filename="${attachment.filename}"`,
+    "",
+    wrap(base64(attachment.bytes)),
+    "",
+  ]);
 
   return [
     ...headers,
@@ -63,13 +74,7 @@ export function buildEml(options: {
     `--${boundary}`,
     textPart,
     "",
-    `--${boundary}`,
-    `Content-Type: ${attachment.contentType}; name="${attachment.filename}"`,
-    "Content-Transfer-Encoding: base64",
-    `Content-Disposition: attachment; filename="${attachment.filename}"`,
-    "",
-    wrap(base64(attachment.bytes)),
-    "",
+    ...parts,
     `--${boundary}--`,
     "",
   ].join("\r\n");
@@ -96,7 +101,7 @@ export function openInOutlook(options: {
   to: string;
   subject: string;
   body: string;
-  attachment?: EmlAttachment | null;
+  attachments?: (EmlAttachment | null | undefined)[];
   filename?: string;
 }) {
   downloadEml(
@@ -104,6 +109,7 @@ export function openInOutlook(options: {
     buildEml(options),
   );
 }
+
 
 export function openMailto(to: string, subject: string, body: string) {
   window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(

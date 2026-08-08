@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { KeyRound, Trash2, UserPlus } from "lucide-react";
+import { Eye, EyeOff, KeyRound, ShieldPlus, Trash2, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -26,7 +26,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useServerFn } from "@tanstack/react-start";
-import { createEluAccount } from "@/lib/elu-accounts.functions";
+import {
+  createAdminAccount,
+  createEluAccount,
+  deleteUserAccount,
+  listAdmins,
+} from "@/lib/elu-accounts.functions";
+
 
 export const Route = createFileRoute("/_authenticated/elus")({
   head: () => ({
@@ -52,8 +58,17 @@ function ElusPage() {
   const [creatingFor, setCreatingFor] = useState<string | null>(null);
   const [resetFor, setResetFor] = useState<{ id: string; name: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(true);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [showAdminPassword, setShowAdminPassword] = useState(true);
   const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
   const createAccount = useServerFn(createEluAccount);
+  const createAdmin = useServerFn(createAdminAccount);
+  const deleteAccount = useServerFn(deleteUserAccount);
+  const fetchAdmins = useServerFn(listAdmins);
+
+  const adminsQuery = useQuery({ queryKey: ["admins"], queryFn: () => fetchAdmins() });
+
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["elus"],
@@ -134,15 +149,53 @@ function ElusPage() {
     }
   }
 
-  async function removeElu(id: string) {
-    const { error } = await supabase.from("elus").delete().eq("id", id);
-    if (error) {
-      toast.error(error.message);
+  async function removeElu(id: string, name: string) {
+    if (!window.confirm(`Supprimer définitivement ${name} et son compte utilisateur ?`)) return;
+    try {
+      await deleteAccount({ data: { eluId: id } });
+      toast.success("Élu et compte supprimés.");
+      refetch();
+      adminsQuery.refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Suppression impossible.");
+    }
+  }
+
+  async function removeAdmin(userId: string, name: string) {
+    if (!window.confirm(`Supprimer définitivement l'administrateur ${name} ?`)) return;
+    try {
+      await deleteAccount({ data: { userId } });
+      toast.success("Administrateur supprimé.");
+      adminsQuery.refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Suppression impossible.");
+    }
+  }
+
+  async function addAdmin(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const fd = new FormData(form);
+    const email = String(fd.get("admin_email") ?? "").trim().toLowerCase();
+    const fullName = String(fd.get("admin_name") ?? "").trim();
+    if (!email || !fullName || adminPassword.length < 8) {
+      toast.error("Nom, e-mail et mot de passe (8 caractères minimum) sont requis.");
       return;
     }
-    toast.success("Élu supprimé.");
-    refetch();
+    setSaving(true);
+    try {
+      const result = await createAdmin({ data: { email, fullName, password: adminPassword } });
+      setCredentials(result);
+      setAdminPassword("");
+      form.reset();
+      adminsQuery.refetch();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Création impossible.");
+    } finally {
+      setSaving(false);
+    }
   }
+
 
 
   return (
@@ -253,7 +306,7 @@ function ElusPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => removeElu(elu.id)}
+                          onClick={() => removeElu(elu.id, elu.full_name)}
                           aria-label={`Supprimer ${elu.full_name}`}
                         >
                           <Trash2 className="h-4 w-4 text-destructive" />
@@ -268,6 +321,85 @@ function ElusPage() {
           )}
         </CardContent>
       </Card>
+
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="font-serif text-lg">Administrateurs</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-6 lg:grid-cols-2">
+          <form onSubmit={addAdmin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="admin_name">Nom et prénom</Label>
+              <Input id="admin_name" name="admin_name" maxLength={120} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="admin_email">Adresse e-mail</Label>
+              <Input id="admin_email" name="admin_email" type="email" maxLength={255} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="admin_password">Mot de passe (8 caractères minimum)</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="admin_password"
+                  type={showAdminPassword ? "text" : "password"}
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  minLength={8}
+                  maxLength={72}
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowAdminPassword((v) => !v)}
+                  aria-label={
+                    showAdminPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"
+                  }
+                >
+                  {showAdminPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <Button type="submit" disabled={saving}>
+              <ShieldPlus className="h-4 w-4" /> Créer l'administrateur
+            </Button>
+          </form>
+
+          <div>
+            {adminsQuery.isLoading ? (
+              <p className="text-sm text-muted-foreground">Chargement…</p>
+            ) : (
+              <ul className="space-y-2">
+                {(adminsQuery.data ?? []).map((admin) => (
+                  <li
+                    key={admin.userId}
+                    className="flex items-center justify-between gap-3 rounded border p-3"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">{admin.fullName}</p>
+                      <p className="text-xs text-muted-foreground">{admin.email}</p>
+                    </div>
+                    {admin.isSelf ? (
+                      <Badge variant="secondary">Vous</Badge>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeAdmin(admin.userId, admin.fullName)}
+                        aria-label={`Supprimer ${admin.fullName}`}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
 
       <Dialog
         open={resetFor !== null}
@@ -289,15 +421,28 @@ function ElusPage() {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="new_password">Nouveau mot de passe (8 caractères minimum)</Label>
-              <Input
-                id="new_password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                minLength={8}
-                maxLength={72}
-                placeholder="Laisser vide pour générer"
-              />
+              <div className="flex gap-2">
+                <Input
+                  id="new_password"
+                  type={showPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  minLength={8}
+                  maxLength={72}
+                  placeholder="Laisser vide pour générer"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
+
             <Button
               disabled={creatingFor === resetFor?.id || (newPassword.length > 0 && newPassword.length < 8)}
               onClick={() =>

@@ -7,6 +7,8 @@ const respondSchema = z.object({
   status: z.enum(["accepted", "declined"]),
 });
 
+export type Participant = { name: string; status: string; isMe: boolean };
+
 export type MyInvitation = {
   id: string;
   status: string;
@@ -15,12 +17,17 @@ export type MyInvitation = {
     id: string;
     title: string;
     location: string;
+    address: string | null;
+    organizer: string | null;
     description: string | null;
     startsAt: string;
     mayorPresent: boolean;
     attachmentName: string | null;
     attachmentUrl: string | null;
+    photoName: string | null;
+    photoUrl: string | null;
   };
+  participants: Participant[];
 };
 
 export const listMyInvitations = createServerFn({ method: "GET" })
@@ -29,7 +36,7 @@ export const listMyInvitations = createServerFn({ method: "GET" })
     const { data, error } = await context.supabase
       .from("invitations")
       .select(
-        "id, status, responded_at, events(id, title, location, description, starts_at, mayor_present, attachment_path, attachment_name)",
+        "id, elu_id, status, responded_at, events(id, title, location, address, organizer, description, starts_at, mayor_present, attachment_path, attachment_name, photo_path, photo_name)",
       );
     if (error) throw new Error(error.message);
 
@@ -38,16 +45,34 @@ export const listMyInvitations = createServerFn({ method: "GET" })
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    const myEluId = rows[0]!.elu_id;
+    const eventIds = rows.map((row) => row.events!.id);
+
+    const { data: allInvites } = await supabaseAdmin
+      .from("invitations")
+      .select("event_id, elu_id, status, elus(full_name)")
+      .in("event_id", eventIds);
+
+    async function signed(path: string | null) {
+      if (!path) return null;
+      const { data: url } = await supabaseAdmin.storage
+        .from("ird-attachments")
+        .createSignedUrl(path, 60 * 60);
+      return url?.signedUrl ?? null;
+    }
+
     const invitations = await Promise.all(
       rows.map(async (row) => {
         const event = row.events!;
-        let attachmentUrl: string | null = null;
-        if (event.attachment_path) {
-          const { data: signed } = await supabaseAdmin.storage
-            .from("ird-attachments")
-            .createSignedUrl(event.attachment_path, 60 * 60);
-          attachmentUrl = signed?.signedUrl ?? null;
-        }
+        const participants: Participant[] = (allInvites ?? [])
+          .filter((i) => i.event_id === event.id && i.elus)
+          .map((i) => ({
+            name: i.elus!.full_name,
+            status: i.status,
+            isMe: i.elu_id === myEluId,
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name, "fr"));
+
         return {
           id: row.id,
           status: row.status,
@@ -56,12 +81,17 @@ export const listMyInvitations = createServerFn({ method: "GET" })
             id: event.id,
             title: event.title,
             location: event.location,
+            address: event.address,
+            organizer: event.organizer,
             description: event.description,
             startsAt: event.starts_at,
             mayorPresent: event.mayor_present,
             attachmentName: event.attachment_name,
-            attachmentUrl,
+            attachmentUrl: await signed(event.attachment_path),
+            photoName: event.photo_name,
+            photoUrl: await signed(event.photo_path),
           },
+          participants,
         };
       }),
     );

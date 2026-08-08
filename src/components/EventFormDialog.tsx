@@ -32,12 +32,28 @@ export function EventFormDialog({
 }) {
   const [saving, setSaving] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [photo, setPhoto] = useState<File | null>(null);
+
+  async function uploadFile(f: File, label: string) {
+    if (f.size > 15 * 1024 * 1024) {
+      throw new Error(`${label} ne doit pas dépasser 15 Mo.`);
+    }
+    const safe = f.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const path = `${crypto.randomUUID()}-${safe}`;
+    const { error } = await supabase.storage
+      .from("ird-attachments")
+      .upload(path, f, { upsert: false });
+    if (error) throw error;
+    return path;
+  }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const title = String(form.get("title") ?? "").trim();
     const location = String(form.get("location") ?? "").trim();
+    const address = String(form.get("address") ?? "").trim();
+    const organizer = String(form.get("organizer") ?? "").trim();
     const description = String(form.get("description") ?? "").trim();
     const startsAt = String(form.get("starts_at") ?? "");
     const mayorPresent = form.get("mayor_present") === "on";
@@ -51,29 +67,31 @@ export function EventFormDialog({
     try {
       let attachmentPath = event?.attachment_path ?? null;
       let attachmentName = event?.attachment_name ?? null;
+      let photoPath = event?.photo_path ?? null;
+      let photoName = event?.photo_name ?? null;
 
       if (file) {
-        if (file.size > 15 * 1024 * 1024) {
-          throw new Error("La pièce jointe ne doit pas dépasser 15 Mo.");
-        }
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-        const path = `${crypto.randomUUID()}-${safeName}`;
-        const { error: uploadError } = await supabase.storage
-          .from("ird-attachments")
-          .upload(path, file, { upsert: false });
-        if (uploadError) throw uploadError;
-        attachmentPath = path;
+        attachmentPath = await uploadFile(file, "La pièce jointe");
         attachmentName = file.name;
+      }
+
+      if (photo) {
+        photoPath = await uploadFile(photo, "Le visuel de l'invitation");
+        photoName = photo.name;
       }
 
       const payload = {
         title,
         location,
+        address: address || null,
+        organizer: organizer || null,
         description: description || null,
         starts_at: new Date(startsAt).toISOString(),
         mayor_present: mayorPresent,
         attachment_path: attachmentPath,
         attachment_name: attachmentName,
+        photo_path: photoPath,
+        photo_name: photoName,
       };
 
       if (event) {
@@ -93,6 +111,7 @@ export function EventFormDialog({
         onSaved(data.id);
       }
       setFile(null);
+      setPhoto(null);
       onOpenChange(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Enregistrement impossible.");
@@ -100,6 +119,7 @@ export function EventFormDialog({
       setSaving(false);
     }
   }
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -128,6 +148,27 @@ export function EventFormDialog({
             />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="address">Adresse complète (facultative)</Label>
+            <Input
+              id="address"
+              name="address"
+              defaultValue={event?.address ?? ""}
+              maxLength={250}
+              placeholder="12 place du Bourg, 12000 Rodez"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="organizer">Organisateur</Label>
+            <Input
+              id="organizer"
+              name="organizer"
+              defaultValue={event?.organizer ?? ""}
+              maxLength={160}
+              placeholder="Nom de la personne qui organise"
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="starts_at">Date et heure</Label>
             <Input
               id="starts_at"
@@ -148,7 +189,7 @@ export function EventFormDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="attachment">Pièce jointe</Label>
+            <Label htmlFor="attachment">Pièce jointe (document)</Label>
             <Input
               id="attachment"
               type="file"
@@ -161,6 +202,19 @@ export function EventFormDialog({
               </p>
             )}
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="photo">Photo / visuel de l'invitation</Label>
+            <Input
+              id="photo"
+              type="file"
+              accept="image/*,.pdf"
+              onChange={(e) => setPhoto(e.target.files?.[0] ?? null)}
+            />
+            {event?.photo_name && !photo && (
+              <p className="text-xs text-muted-foreground">Visuel actuel : {event.photo_name}</p>
+            )}
+          </div>
+
           <div className="flex items-center gap-2 rounded border bg-secondary/60 p-3">
             <Checkbox
               id="mayor_present"
