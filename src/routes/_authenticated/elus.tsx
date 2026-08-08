@@ -322,6 +322,85 @@ function ElusPage() {
         </CardContent>
       </Card>
 
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="font-serif text-lg">Administrateurs</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-6 lg:grid-cols-2">
+          <form onSubmit={addAdmin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="admin_name">Nom et prénom</Label>
+              <Input id="admin_name" name="admin_name" maxLength={120} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="admin_email">Adresse e-mail</Label>
+              <Input id="admin_email" name="admin_email" type="email" maxLength={255} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="admin_password">Mot de passe (8 caractères minimum)</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="admin_password"
+                  type={showAdminPassword ? "text" : "password"}
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  minLength={8}
+                  maxLength={72}
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowAdminPassword((v) => !v)}
+                  aria-label={
+                    showAdminPassword ? "Masquer le mot de passe" : "Afficher le mot de passe"
+                  }
+                >
+                  {showAdminPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <Button type="submit" disabled={saving}>
+              <ShieldPlus className="h-4 w-4" /> Créer l'administrateur
+            </Button>
+          </form>
+
+          <div>
+            {adminsQuery.isLoading ? (
+              <p className="text-sm text-muted-foreground">Chargement…</p>
+            ) : (
+              <ul className="space-y-2">
+                {(adminsQuery.data ?? []).map((admin) => (
+                  <li
+                    key={admin.userId}
+                    className="flex items-center justify-between gap-3 rounded border p-3"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">{admin.fullName}</p>
+                      <p className="text-xs text-muted-foreground">{admin.email}</p>
+                    </div>
+                    {admin.isSelf ? (
+                      <Badge variant="secondary">Vous</Badge>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeAdmin(admin.userId, admin.fullName)}
+                        aria-label={`Supprimer ${admin.fullName}`}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+
       <Dialog
         open={resetFor !== null}
         onOpenChange={(open) => {
