@@ -43,6 +43,7 @@ export type Database = {
       }
       events: {
         Row: {
+          address: string | null
           attachment_name: string | null
           attachment_path: string | null
           created_at: string
@@ -51,11 +52,15 @@ export type Database = {
           id: string
           location: string
           mayor_present: boolean
+          organizer: string | null
+          photo_name: string | null
+          photo_path: string | null
           starts_at: string
           title: string
           updated_at: string
         }
         Insert: {
+          address?: string | null
           attachment_name?: string | null
           attachment_path?: string | null
           created_at?: string
@@ -64,11 +69,15 @@ export type Database = {
           id?: string
           location: string
           mayor_present?: boolean
+          organizer?: string | null
+          photo_name?: string | null
+          photo_path?: string | null
           starts_at: string
           title: string
           updated_at?: string
         }
         Update: {
+          address?: string | null
           attachment_name?: string | null
           attachment_path?: string | null
           created_at?: string
@@ -77,6 +86,9 @@ export type Database = {
           id?: string
           location?: string
           mayor_present?: boolean
+          organizer?: string | null
+          photo_name?: string | null
+          photo_path?: string | null
           starts_at?: string
           title?: string
           updated_at?: string
