@@ -53,6 +53,10 @@ mkdirSync(outDir, { recursive: true });
 cpSync(nitroOutput, resolve(outDir, ".output"), { recursive: true });
 cpSync(resolve(root, "deploy/iis/web.config"), resolve(outDir, "web.config"));
 cpSync(resolve(root, "deploy/iis/LISEZ-MOI.md"), resolve(outDir, "LISEZ-MOI.md"));
+cpSync(
+  resolve(root, "deploy/iis/GUIDE-INSTALLATION-PAS-A-PAS.md"),
+  resolve(outDir, "GUIDE-INSTALLATION-PAS-A-PAS.md"),
+);
 mkdirSync(resolve(outDir, "logs"), { recursive: true });
 writeFileSync(resolve(outDir, "logs/.gitkeep"), "");
 
