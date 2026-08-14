@@ -286,6 +286,8 @@ Set-EnvVar "SUPABASE_PUBLISHABLE_KEY" $AnonKey
 Set-EnvVar "SUPABASE_SERVICE_ROLE_KEY" $ServiceRoleKey
 Set-EnvVar "VITE_SUPABASE_URL" $PublicSupabaseUrl
 Set-EnvVar "VITE_SUPABASE_PUBLISHABLE_KEY" $AnonKey
+Set-EnvVar "DATABASE_URL" $DatabaseUrl
+
 
 $xml.Save($webConfigPath)
 
