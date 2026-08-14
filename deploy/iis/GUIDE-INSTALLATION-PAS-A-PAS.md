@@ -272,6 +272,37 @@ Node.js et Git y sont installés — c'est possible et souvent plus simple).
 
 ## Partie E — Installer l'application dans IIS
 
+### E.0 (Recommandé) Installation automatique en une commande
+
+Le paquet contient un script `installer-ird.ps1` qui fait **tout** à votre place :
+IIS, Node.js, module HttpPlatformHandler, pare-feu, copie des fichiers,
+paramètres de connexion, création du site et démarrage.
+
+1. Copier le dossier `dist-iis\` sur le serveur, par exemple dans `C:\install-ird`.
+2. Ouvrir **PowerShell en tant qu'administrateur**, puis :
+
+   ```powershell
+   cd C:\install-ird
+   powershell -ExecutionPolicy Bypass -File .\installer-ird.ps1 `
+     -SupabaseUrl "http://localhost:8000" `
+     -PublicSupabaseUrl "http://nom-du-serveur:8000" `
+     -AnonKey "votre_cle_anon" `
+     -ServiceRoleKey "votre_cle_service_role"
+   ```
+
+3. À la fin, le script affiche l'adresse du site et vérifie qu'il répond.
+
+Options utiles : `-SitePath C:\inetpub\ird` (dossier d'installation),
+`-SiteName IRD`, `-Port 80`, `-HostName srv-ird.mairie.local`,
+`-SkipPrerequisites` (si IIS et Node.js sont déjà installés).
+
+Le script sert aussi aux **mises à jour** : relancez-le avec le nouveau paquet,
+il sauvegarde l'ancienne version avant de remplacer les fichiers.
+
+> Si vous préférez tout faire à la main, suivez les étapes E.1 à E.4 ci-dessous.
+
+
+
 ### E.1 Renseigner les paramètres de connexion
 
 Ouvrir `C:\inetpub\ird\web.config` avec le Bloc-notes et remplacer les trois
