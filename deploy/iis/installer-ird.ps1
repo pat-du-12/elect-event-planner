@@ -12,15 +12,25 @@
       6. crée (ou met à jour) le pool d'applications et le site IIS, puis le démarre.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File .\installer-ird.ps1 `
-        -SupabaseUrl "http://localhost:8000" `
-        -AnonKey "cle_anon" `
-        -ServiceRoleKey "cle_service_role" `
-        -PublicSupabaseUrl "http://srv-ird.mairie.local:8000"
+    # Mode guidé : le script pose les questions manquantes
+    powershell -ExecutionPolicy Bypass -File .\installer-ird.ps1
+
+.EXAMPLE
+    # Tout en ligne de commande (aucune saisie, aucune modification de fichier)
+    powershell -ExecutionPolicy Bypass -File .\installer-ird.ps1 -NonInteractive `
+        -SiteName "IRD" -Port 8080 -SitePath "D:\apps\ird" -HostName "srv-ird.mairie.local" `
+        -SupabaseUrl "http://localhost:8000" -PublicSupabaseUrl "http://srv-ird.mairie.local:8000" `
+        -AnonKey "cle_anon" -ServiceRoleKey "cle_service_role" `
+        -DbHost "localhost" -DbPort 5432 -DbName "postgres" -DbUser "postgres" -DbPassword "motdepasse"
+
+.EXAMPLE
+    # Via un fichier de réponses JSON
+    powershell -ExecutionPolicy Bypass -File .\installer-ird.ps1 -NonInteractive -ConfigFile .\ird-config.json
 
 .NOTES
     À lancer dans une console PowerShell ouverte « en tant qu'administrateur »,
     depuis le dossier dist-iis (ou en précisant -SourcePath).
+
 #>
 
 [CmdletBinding()]
@@ -28,26 +38,40 @@ param(
     # Dossier contenant .output\ et web.config (paquet produit par « npm run build:iis »)
     [string]$SourcePath = (Split-Path -Parent $MyInvocation.MyCommand.Path),
 
+    # Fichier de réponses JSON (facultatif) contenant tout ou partie des options
+    [string]$ConfigFile = "",
+
     # Dossier d'installation sur le serveur
-    [string]$SitePath = "C:\inetpub\ird",
+    [string]$SitePath = "",
 
     # Nom du site et du pool IIS
-    [string]$SiteName = "IRD",
+    [string]$SiteName = "",
 
     # Port HTTP du site
-    [int]$Port = 80,
+    [int]$Port = 0,
 
     # Nom d'hôte (facultatif, ex. srv-ird.mairie.local)
     [string]$HostName = "",
 
     # Adresse de la base vue depuis le serveur
-    [string]$SupabaseUrl = "http://localhost:8000",
+    [string]$SupabaseUrl = "",
 
     # Adresse de la base vue depuis les postes utilisateurs (par défaut = SupabaseUrl)
     [string]$PublicSupabaseUrl = "",
 
     [string]$AnonKey = "",
     [string]$ServiceRoleKey = "",
+
+    # Connexion PostgreSQL directe (facultative : construit DATABASE_URL)
+    [string]$DbHost = "",
+    [int]$DbPort = 0,
+    [string]$DbName = "",
+    [string]$DbUser = "",
+    [string]$DbPassword = "",
+    [string]$DatabaseUrl = "",
+
+    # Poser les questions manquantes à l'écran (défaut) ou échouer si une valeur manque
+    [switch]$NonInteractive,
 
     # Ne pas installer IIS / Node.js / HttpPlatformHandler (si déjà présents)
     [switch]$SkipPrerequisites
@@ -71,7 +95,83 @@ if (-not (Test-Path (Join-Path $SourcePath ".output"))) {
     throw "Dossier .output introuvable dans « $SourcePath ». Lancez « npm run build:iis » puis copiez le dossier dist-iis sur le serveur."
 }
 
+# --- 0bis. Options : fichier JSON, puis questions à l'écran -------------------
+
+$answers = @{}
+if (-not [string]::IsNullOrWhiteSpace($ConfigFile)) {
+    if (-not (Test-Path $ConfigFile)) { throw "Fichier de réponses introuvable : $ConfigFile" }
+    $json = Get-Content $ConfigFile -Raw | ConvertFrom-Json
+    foreach ($p in $json.PSObject.Properties) { $answers[$p.Name] = [string]$p.Value }
+    Write-Ok "Options lues depuis $ConfigFile"
+}
+
+function Resolve-Option {
+    param(
+        [string]$Name,        # nom de l'option (aussi utilisé dans le JSON)
+        [string]$Current,     # valeur passée en paramètre
+        [string]$Default,     # valeur par défaut proposée
+        [string]$Question,    # question affichée
+        [switch]$AllowEmpty   # accepter une valeur vide
+    )
+    if (-not [string]::IsNullOrWhiteSpace($Current)) { return $Current }
+    if ($answers.ContainsKey($Name) -and -not [string]::IsNullOrWhiteSpace($answers[$Name])) {
+        return $answers[$Name]
+    }
+    if ($NonInteractive) {
+        if ([string]::IsNullOrWhiteSpace($Default) -and -not $AllowEmpty) {
+            throw "Option manquante en mode non interactif : -$Name"
+        }
+        return $Default
+    }
+    $label = if ([string]::IsNullOrWhiteSpace($Default)) { $Question } else { "$Question [$Default]" }
+    $value = Read-Host $label
+    if ([string]::IsNullOrWhiteSpace($value)) { $value = $Default }
+    if ([string]::IsNullOrWhiteSpace($value) -and -not $AllowEmpty) {
+        throw "Une valeur est nécessaire pour « $Name »."
+    }
+    return $value
+}
+
+if (-not $NonInteractive) { Write-Step "Paramètres de l'installation (Entrée = valeur proposée)" }
+
+$SiteName = Resolve-Option -Name "SiteName" -Current $SiteName -Default "IRD" -Question "Nom du site IIS"
+$SitePath = Resolve-Option -Name "SitePath" -Current $SitePath -Default "C:\inetpub\ird" -Question "Dossier de déploiement"
+$portValue = Resolve-Option -Name "Port" -Current $(if ($Port -gt 0) { "$Port" } else { "" }) -Default "80" -Question "Port HTTP du site"
+$Port = [int]$portValue
+$HostName = Resolve-Option -Name "HostName" -Current $HostName -Default "" -Question "Nom d'hôte (vide = toutes les adresses)" -AllowEmpty
+
+Write-Step "Paramètres de la base de données"
+$SupabaseUrl = Resolve-Option -Name "SupabaseUrl" -Current $SupabaseUrl -Default "http://localhost:8000" -Question "Adresse de la base (depuis le serveur)"
+$PublicSupabaseUrl = Resolve-Option -Name "PublicSupabaseUrl" -Current $PublicSupabaseUrl -Default $SupabaseUrl -Question "Adresse de la base (depuis les postes)"
+$AnonKey = Resolve-Option -Name "AnonKey" -Current $AnonKey -Default "" -Question "Clé publique (anon)" -AllowEmpty
+$ServiceRoleKey = Resolve-Option -Name "ServiceRoleKey" -Current $ServiceRoleKey -Default "" -Question "Clé de service (service_role)" -AllowEmpty
+
+$DatabaseUrl = Resolve-Option -Name "DatabaseUrl" -Current $DatabaseUrl -Default "" -Question "Chaîne de connexion PostgreSQL complète (vide = la construire)" -AllowEmpty
+if ([string]::IsNullOrWhiteSpace($DatabaseUrl)) {
+    $DbHost = Resolve-Option -Name "DbHost" -Current $DbHost -Default "" -Question "Serveur PostgreSQL (vide = ignorer)" -AllowEmpty
+    if (-not [string]::IsNullOrWhiteSpace($DbHost)) {
+        $dbPortValue = Resolve-Option -Name "DbPort" -Current $(if ($DbPort -gt 0) { "$DbPort" } else { "" }) -Default "5432" -Question "Port PostgreSQL"
+        $DbPort = [int]$dbPortValue
+        $DbName = Resolve-Option -Name "DbName" -Current $DbName -Default "postgres" -Question "Nom de la base"
+        $DbUser = Resolve-Option -Name "DbUser" -Current $DbUser -Default "postgres" -Question "Utilisateur PostgreSQL"
+        $DbPassword = Resolve-Option -Name "DbPassword" -Current $DbPassword -Default "" -Question "Mot de passe PostgreSQL" -AllowEmpty
+        $encUser = [uri]::EscapeDataString($DbUser)
+        $encPass = [uri]::EscapeDataString($DbPassword)
+        $DatabaseUrl = "postgresql://${encUser}:${encPass}@${DbHost}:${DbPort}/${DbName}"
+    }
+}
+
 if ([string]::IsNullOrWhiteSpace($PublicSupabaseUrl)) { $PublicSupabaseUrl = $SupabaseUrl }
+
+Write-Step "Récapitulatif"
+Write-Host "  Site IIS          : $SiteName"
+Write-Host "  Dossier           : $SitePath"
+Write-Host "  Port / hôte       : $Port $(if ($HostName) { "($HostName)" })"
+Write-Host "  Base (serveur)    : $SupabaseUrl"
+Write-Host "  Base (postes)     : $PublicSupabaseUrl"
+Write-Host "  Clés fournies     : anon=$([bool]$AnonKey) service_role=$([bool]$ServiceRoleKey)"
+if ($DatabaseUrl) { Write-Host "  PostgreSQL        : configuré" }
+
 
 # --- 1. Prérequis ------------------------------------------------------------
 
@@ -196,6 +296,8 @@ Set-EnvVar "SUPABASE_PUBLISHABLE_KEY" $AnonKey
 Set-EnvVar "SUPABASE_SERVICE_ROLE_KEY" $ServiceRoleKey
 Set-EnvVar "VITE_SUPABASE_URL" $PublicSupabaseUrl
 Set-EnvVar "VITE_SUPABASE_PUBLISHABLE_KEY" $AnonKey
+Set-EnvVar "DATABASE_URL" $DatabaseUrl
+
 
 $xml.Save($webConfigPath)
 
