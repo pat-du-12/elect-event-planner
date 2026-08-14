@@ -12,15 +12,25 @@
       6. crée (ou met à jour) le pool d'applications et le site IIS, puis le démarre.
 
 .EXAMPLE
-    powershell -ExecutionPolicy Bypass -File .\installer-ird.ps1 `
-        -SupabaseUrl "http://localhost:8000" `
-        -AnonKey "cle_anon" `
-        -ServiceRoleKey "cle_service_role" `
-        -PublicSupabaseUrl "http://srv-ird.mairie.local:8000"
+    # Mode guidé : le script pose les questions manquantes
+    powershell -ExecutionPolicy Bypass -File .\installer-ird.ps1
+
+.EXAMPLE
+    # Tout en ligne de commande (aucune saisie, aucune modification de fichier)
+    powershell -ExecutionPolicy Bypass -File .\installer-ird.ps1 -NonInteractive `
+        -SiteName "IRD" -Port 8080 -SitePath "D:\apps\ird" -HostName "srv-ird.mairie.local" `
+        -SupabaseUrl "http://localhost:8000" -PublicSupabaseUrl "http://srv-ird.mairie.local:8000" `
+        -AnonKey "cle_anon" -ServiceRoleKey "cle_service_role" `
+        -DbHost "localhost" -DbPort 5432 -DbName "postgres" -DbUser "postgres" -DbPassword "motdepasse"
+
+.EXAMPLE
+    # Via un fichier de réponses JSON
+    powershell -ExecutionPolicy Bypass -File .\installer-ird.ps1 -NonInteractive -ConfigFile .\ird-config.json
 
 .NOTES
     À lancer dans une console PowerShell ouverte « en tant qu'administrateur »,
     depuis le dossier dist-iis (ou en précisant -SourcePath).
+
 #>
 
 [CmdletBinding()]
