@@ -58,6 +58,8 @@ cpSync(
   resolve(outDir, "GUIDE-INSTALLATION-PAS-A-PAS.md"),
 );
 cpSync(resolve(root, "deploy/iis/installer-ird.ps1"), resolve(outDir, "installer-ird.ps1"));
+cpSync(resolve(root, "deploy/iis/ird-config.json"), resolve(outDir, "ird-config.json"));
+
 mkdirSync(resolve(outDir, "logs"), { recursive: true });
 writeFileSync(resolve(outDir, "logs/.gitkeep"), "");
 
