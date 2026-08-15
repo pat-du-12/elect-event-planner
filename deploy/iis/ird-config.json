@@ -1,0 +1,15 @@
+{
+  "SiteName": "IRD",
+  "SitePath": "C:\\inetpub\\ird",
+  "Port": "80",
+  "HostName": "",
+  "SupabaseUrl": "http://localhost:8000",
+  "PublicSupabaseUrl": "http://nom-du-serveur:8000",
+  "AnonKey": "votre_cle_anon",
+  "ServiceRoleKey": "votre_cle_service_role",
+  "DbHost": "localhost",
+  "DbPort": "5432",
+  "DbName": "postgres",
+  "DbUser": "postgres",
+  "DbPassword": "mot_de_passe_postgres"
+}

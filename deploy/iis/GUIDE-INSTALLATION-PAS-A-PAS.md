@@ -283,18 +283,48 @@ paramètres de connexion, création du site et démarrage.
 
    ```powershell
    cd C:\install-ird
-   powershell -ExecutionPolicy Bypass -File .\installer-ird.ps1 `
-     -SupabaseUrl "http://localhost:8000" `
-     -PublicSupabaseUrl "http://nom-du-serveur:8000" `
-     -AnonKey "votre_cle_anon" `
-     -ServiceRoleKey "votre_cle_service_role"
+   powershell -ExecutionPolicy Bypass -File .\installer-ird.ps1
    ```
+
+   Le script pose alors chaque question (nom du site, port, dossier, adresse et
+   clés de la base…) en proposant une valeur par défaut : appuyez sur **Entrée**
+   pour l'accepter. Aucun fichier n'est à modifier à la main.
 
 3. À la fin, le script affiche l'adresse du site et vérifie qu'il répond.
 
-Options utiles : `-SitePath C:\inetpub\ird` (dossier d'installation),
-`-SiteName IRD`, `-Port 80`, `-HostName srv-ird.mairie.local`,
-`-SkipPrerequisites` (si IIS et Node.js sont déjà installés).
+**Tout indiquer en une seule commande** (sans aucune question) :
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\installer-ird.ps1 -NonInteractive `
+  -SiteName "IRD" -Port 8080 -SitePath "D:\apps\ird" -HostName "srv-ird.mairie.local" `
+  -SupabaseUrl "http://localhost:8000" -PublicSupabaseUrl "http://nom-du-serveur:8000" `
+  -AnonKey "votre_cle_anon" -ServiceRoleKey "votre_cle_service_role" `
+  -DbHost "localhost" -DbPort 5432 -DbName "postgres" -DbUser "postgres" -DbPassword "motdepasse"
+```
+
+**Ou avec un fichier de réponses** `ird-config.json` (modèle fourni dans le paquet) :
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\installer-ird.ps1 -NonInteractive -ConfigFile .\ird-config.json
+```
+
+Liste des options :
+
+| Option | Rôle | Défaut |
+| --- | --- | --- |
+| `-SiteName` | Nom du site et du pool IIS | `IRD` |
+| `-SitePath` | Dossier de déploiement | `C:\inetpub\ird` |
+| `-Port` | Port HTTP | `80` |
+| `-HostName` | Nom d'hôte du site | (toutes adresses) |
+| `-SupabaseUrl` | Adresse de la base vue du serveur | `http://localhost:8000` |
+| `-PublicSupabaseUrl` | Adresse de la base vue des postes | = `-SupabaseUrl` |
+| `-AnonKey` / `-ServiceRoleKey` | Clés de la base | (à fournir) |
+| `-DbHost` / `-DbPort` / `-DbName` / `-DbUser` / `-DbPassword` | Connexion PostgreSQL directe (`DATABASE_URL`) | `localhost` / `5432` / `postgres` / `postgres` |
+| `-DatabaseUrl` | Chaîne de connexion complète (remplace les 5 options ci-dessus) | — |
+| `-ConfigFile` | Fichier JSON de réponses | — |
+| `-NonInteractive` | N'affiche aucune question | — |
+| `-SkipPrerequisites` | IIS et Node.js déjà installés | — |
+
 
 Le script sert aussi aux **mises à jour** : relancez-le avec le nouveau paquet,
 il sauvegarde l'ancienne version avant de remplacer les fichiers.
