@@ -57,6 +57,10 @@ cpSync(
   resolve(root, "deploy/iis/GUIDE-INSTALLATION-PAS-A-PAS.md"),
   resolve(outDir, "GUIDE-INSTALLATION-PAS-A-PAS.md"),
 );
+cpSync(
+  resolve(root, "deploy/iis/TUTO-WINDOWS-11.md"),
+  resolve(outDir, "TUTO-WINDOWS-11.md"),
+);
 cpSync(resolve(root, "deploy/iis/installer-ird.ps1"), resolve(outDir, "installer-ird.ps1"));
 cpSync(resolve(root, "deploy/iis/ird-config.json"), resolve(outDir, "ird-config.json"));
 
