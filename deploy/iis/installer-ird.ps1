@@ -91,9 +91,14 @@ if (-not $isAdmin) {
     throw "Ce script doit être lancé dans une console PowerShell ouverte en tant qu'administrateur."
 }
 
-if (-not (Test-Path (Join-Path $SourcePath ".output"))) {
-    throw "Dossier .output introuvable dans « $SourcePath ». Lancez « npm run build:iis » puis copiez le dossier dist-iis sur le serveur."
+$OutputName = @(".output", "dist") | Where-Object {
+    Test-Path (Join-Path $SourcePath (Join-Path $_ "server\index.mjs"))
+} | Select-Object -First 1
+
+if (-not $OutputName) {
+    throw "Sortie serveur introuvable dans « $SourcePath » (ni .output\server\index.mjs, ni dist\server\index.mjs). Lancez « npm run build:iis » puis copiez le dossier dist-iis sur le serveur."
 }
+
 
 # --- 0bis. Options : fichier JSON, puis questions à l'écran -------------------
 
