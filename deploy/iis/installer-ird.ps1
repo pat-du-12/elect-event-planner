@@ -256,18 +256,20 @@ if (Test-Path $SitePath) {
         Stop-Website -Name $SiteName -ErrorAction SilentlyContinue
     }
     $backup = "$SitePath.backup-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
-    if (Test-Path (Join-Path $SitePath ".output")) {
-        New-Item -ItemType Directory -Force -Path $backup | Out-Null
-        Copy-Item (Join-Path $SitePath ".output") $backup -Recurse -Force
-        Write-Ok "Sauvegarde de l'ancienne version : $backup"
+    foreach ($old in @(".output", "dist")) {
+        if (Test-Path (Join-Path $SitePath $old)) {
+            New-Item -ItemType Directory -Force -Path $backup | Out-Null
+            Copy-Item (Join-Path $SitePath $old) $backup -Recurse -Force
+            Write-Ok "Sauvegarde de l'ancienne version : $backup"
+            Remove-Item (Join-Path $SitePath $old) -Recurse -Force -ErrorAction SilentlyContinue
+        }
     }
-    Remove-Item (Join-Path $SitePath ".output") -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 New-Item -ItemType Directory -Force -Path $SitePath | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $SitePath "logs") | Out-Null
 
-Copy-Item (Join-Path $SourcePath ".output") $SitePath -Recurse -Force
+Copy-Item (Join-Path $SourcePath $OutputName) $SitePath -Recurse -Force
 foreach ($file in @("web.config", "LISEZ-MOI.md", "GUIDE-INSTALLATION-PAS-A-PAS.md")) {
     $src = Join-Path $SourcePath $file
     if (Test-Path $src) { Copy-Item $src $SitePath -Force }
