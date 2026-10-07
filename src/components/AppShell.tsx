@@ -50,6 +50,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <Link to="/calendrier" className={linkClass}>
               Calendrier
             </Link>
+            <Link to="/agenda-cabinet" className={linkClass}>
+              Agenda cabinet
+            </Link>
 
             <Button
               variant="ghost"
