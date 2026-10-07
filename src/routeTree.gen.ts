@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AgendaCabinetRouteImport } from './routes/agenda-cabinet'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CalendrierRouteImport } from './routes/calendrier'
 import { Route as AuthenticatedElusRouteImport } from './routes/_authenticated/elus'
@@ -26,6 +27,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AgendaCabinetRoute = AgendaCabinetRouteImport.update({
+  id: '/agenda-cabinet',
+  path: '/agenda-cabinet',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -68,6 +74,7 @@ const AuthenticatedIrdIdRoute = AuthenticatedIrdIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agenda-cabinet': typeof AgendaCabinetRoute
   '/auth': typeof AuthRoute
   '/calendrier': typeof CalendrierRoute
   '/elus': typeof AuthenticatedElusRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agenda-cabinet': typeof AgendaCabinetRoute
   '/auth': typeof AuthRoute
   '/calendrier': typeof CalendrierRoute
   '/elus': typeof AuthenticatedElusRoute
@@ -90,6 +98,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/agenda-cabinet': typeof AgendaCabinetRoute
   '/auth': typeof AuthRoute
   '/calendrier': typeof CalendrierRoute
   '/_authenticated/elus': typeof AuthenticatedElusRoute
@@ -102,6 +111,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/agenda-cabinet'
     | '/auth'
     | '/calendrier'
     | '/elus'
@@ -112,6 +122,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/agenda-cabinet'
     | '/auth'
     | '/calendrier'
     | '/elus'
@@ -123,6 +134,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/agenda-cabinet'
     | '/auth'
     | '/calendrier'
     | '/_authenticated/elus'
@@ -135,6 +147,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AgendaCabinetRoute: typeof AgendaCabinetRoute
   AuthRoute: typeof AuthRoute
   CalendrierRoute: typeof CalendrierRoute
   InvitationTokenRoute: typeof InvitationTokenRoute
@@ -154,6 +167,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/agenda-cabinet': {
+      id: '/agenda-cabinet'
+      path: '/agenda-cabinet'
+      fullPath: '/agenda-cabinet'
+      preLoaderRoute: typeof AgendaCabinetRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -228,6 +248,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AgendaCabinetRoute: AgendaCabinetRoute,
   AuthRoute: AuthRoute,
   CalendrierRoute: CalendrierRoute,
   InvitationTokenRoute: InvitationTokenRoute,
