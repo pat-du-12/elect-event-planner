@@ -38,7 +38,7 @@ function B64Url([byte[]]$b) { [Convert]::ToBase64String($b).TrimEnd("=").Replace
 
 function Jeton([string]$role, [string]$secret) {
     $u = [Text.Encoding]::UTF8
-    $iat = [int][double]::Parse((Get-Date -UFormat %s))
+    $iat = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
     $h = B64Url $u.GetBytes('{"alg":"HS256","typ":"JWT"}')
     $p = B64Url $u.GetBytes("{`"role`":`"$role`",`"iss`":`"supabase`",`"iat`":$iat,`"exp`":$($iat + 315360000)}")
     $hmac = New-Object Security.Cryptography.HMACSHA256 (, $u.GetBytes($secret))
