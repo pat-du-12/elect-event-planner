@@ -8,3 +8,7 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+## Architecture decisions
+- Local self-hosting uses Docker (deploy/docker + root .bat launchers): app image built with NITRO_PRESET=node-server next to self-hosted Supabase in one compose project — one install tool, no IIS/Node setup for the end user.
+- Storage bucket and its policies for self-hosting live in deploy/docker/sql/stockage.sql — they are not part of supabase/migrations.
