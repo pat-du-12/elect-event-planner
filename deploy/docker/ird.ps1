@@ -228,6 +228,7 @@ switch ($Action) {
         git -C $Source pull
     }
     Etape "Mise a jour des composants de la base"
+    Copy-Item (Join-Path $PSScriptRoot "docker-compose.app.yml") $Base -Force
     docker @Compose pull --ignore-buildable
     Demarrer; Attendre-Base; Appliquer-Migrations; Afficher-Fin
 }
