@@ -107,8 +107,19 @@ function Demarrer {
 
 function Installer-Certificat {
     $crt = Join-Path $Dossier "certificat-IRD.crt"
+    # Retrouve le conteneur HTTPS quel que soit son nom reel (Compose peut le renommer).
+    $cid = ""
     for ($i = 0; $i -lt 20; $i++) {
-        docker cp ird-https:/data/caddy/pki/authorities/local/root.crt $crt 2>$null
+        $cid = (docker @Compose ps -q ird-https 2>$null | Select-Object -First 1)
+        if ($cid) { break }
+        Start-Sleep -Seconds 3
+    }
+    if (-not $cid) {
+        Write-Host "  Conteneur HTTPS introuvable : le navigateur affichera un avertissement." -ForegroundColor Yellow
+        return
+    }
+    for ($i = 0; $i -lt 20; $i++) {
+        docker cp "${cid}:/data/caddy/pki/authorities/local/root.crt" $crt 2>$null
         if ($LASTEXITCODE -eq 0) { break }
         Start-Sleep -Seconds 3
     }
