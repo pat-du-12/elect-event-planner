@@ -1,0 +1,11 @@
+# HTTPS local : certificat genere par Caddy (autorite locale "tls internal").
+https://{$IRD_HOTE}, https://localhost {
+	tls internal
+	reverse_proxy ird-app:3000
+}
+
+# API de la base en HTTPS (evite le blocage "contenu mixte" du navigateur).
+https://{$IRD_HOTE}:8443, https://localhost:8443 {
+	tls internal
+	reverse_proxy host.docker.internal:8000
+}

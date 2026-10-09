@@ -92,18 +92,38 @@ function Appliquer-Migrations {
 
 function Demarrer {
     Etape "Demarrage (la premiere fois : 10 a 20 minutes)"
+    $h = (Lire-Env)["IRD_HOTE"]
+    Ecrire-Env @{ SITE_URL = "https://$h"; API_EXTERNAL_URL = "https://${h}:8443"; SUPABASE_PUBLIC_URL = "https://${h}:8443" }
+    foreach ($r in @(@{n = "IRD https"; p = 443 }, @{n = "IRD https base"; p = 8443 }, @{n = "IRD http"; p = 80 })) {
+        if (-not (Get-NetFirewallRule -DisplayName $r.n -ErrorAction SilentlyContinue)) {
+            New-NetFirewallRule -DisplayName $r.n -Direction Inbound -Protocol TCP -LocalPort $r.p -Action Allow | Out-Null
+        }
+    }
     docker @Compose up -d --build
     if ($LASTEXITCODE -ne 0) { Erreur "Le demarrage a echoue (voir les messages ci-dessus)." }
     Ok "Services demarres"
+    Installer-Certificat
+}
+
+function Installer-Certificat {
+    $crt = Join-Path $Dossier "certificat-IRD.crt"
+    for ($i = 0; $i -lt 20; $i++) {
+        docker cp ird-https:/data/caddy/pki/authorities/local/root.crt $crt 2>$null
+        if ($LASTEXITCODE -eq 0) { break }
+        Start-Sleep -Seconds 3
+    }
+    if (Test-Path $crt) {
+        Import-Certificate -FilePath $crt -CertStoreLocation Cert:\LocalMachine\Root | Out-Null
+        Ok "Certificat HTTPS approuve sur ce PC (pour les autres postes : $crt)"
+    } else { Write-Host "  Certificat HTTPS non recupere : le navigateur affichera un avertissement." -ForegroundColor Yellow }
 }
 
 function Afficher-Fin {
     $e = Lire-Env
-    $port = $e["IRD_PORT"]
-    $adr = if ($port -eq "80") { "http://$($e['IRD_HOTE'])" } else { "http://$($e['IRD_HOTE']):$port" }
+    $adr = "https://$($e['IRD_HOTE'])"
     Write-Host "`n==============================================" -ForegroundColor Green
     Write-Host "  Application : $adr" -ForegroundColor Green
-    Write-Host "  Sur ce PC   : http://localhost$(if ($port -ne '80') { ":$port" })" -ForegroundColor Green
+    Write-Host "  Sur ce PC   : https://localhost" -ForegroundColor Green
     Write-Host "  Console base: $($e['SUPABASE_PUBLIC_URL'])  (identifiant $($e['DASHBOARD_USERNAME']))" -ForegroundColor Green
     Write-Host "  Mots de passe et cles : $Dossier\MOTS-DE-PASSE.txt" -ForegroundColor Green
     Write-Host "==============================================" -ForegroundColor Green
