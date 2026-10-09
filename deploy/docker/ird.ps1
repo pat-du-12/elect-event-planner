@@ -147,6 +147,8 @@ switch ($Action) {
     Tester-Docker
     if (Test-Path $EnvFile) {
         Write-Host "Une installation existe deja dans $Dossier : redemarrage simple." -ForegroundColor Yellow
+        # Recopie la configuration de l'application (elle a pu evoluer depuis la premiere installation).
+        Copy-Item (Join-Path $PSScriptRoot "docker-compose.app.yml") $Base -Force
         Demarrer; Attendre-Base; Appliquer-Migrations; Afficher-Fin; break
     }
 
@@ -226,6 +228,7 @@ switch ($Action) {
         git -C $Source pull
     }
     Etape "Mise a jour des composants de la base"
+    Copy-Item (Join-Path $PSScriptRoot "docker-compose.app.yml") $Base -Force
     docker @Compose pull --ignore-buildable
     Demarrer; Attendre-Base; Appliquer-Migrations; Afficher-Fin
 }
