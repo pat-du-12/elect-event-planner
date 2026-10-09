@@ -18,5 +18,5 @@ services:
       VITE_SUPABASE_URL: ${SUPABASE_PUBLIC_URL}
       VITE_SUPABASE_PUBLISHABLE_KEY: ${ANON_KEY}
     depends_on:
-      kong:
+      db:
         condition: service_started
